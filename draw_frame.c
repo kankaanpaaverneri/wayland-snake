@@ -13,6 +13,13 @@ struct wl_buffer *draw_frame(struct state *state) {
 	const int width = SURFACE_WIDTH, height = SURFACE_HEIGHT;
 	int stride = width * 4;
 	int size = stride * height;
+	// Clear previous data
+	for(int y = 0; y < height; y++) {
+		for(int x = 0; x < width; x++) {
+			state->data[y * width + x] = 0;	
+		}	
+	}
+	/*
 
 	int file_descriptor = allocate_shared_memory_file(size);
 	if(!file_descriptor) {
@@ -30,11 +37,12 @@ struct wl_buffer *draw_frame(struct state *state) {
 		close(file_descriptor);	
 		return NULL;
 	}
+	*/
 
 	struct wl_shm_pool *pool = wl_shm_create_pool(
 		state->shared_memory,
-		file_descriptor,
-		size
+		state->file_descriptor,
+		state->size
 	);
 	struct wl_buffer *buffer = wl_shm_pool_create_buffer(
 		pool,
@@ -44,8 +52,10 @@ struct wl_buffer *draw_frame(struct state *state) {
 		stride,
 		WL_SHM_FORMAT_XRGB8888
 	);
+
 	wl_shm_pool_destroy(pool);
-	close(file_descriptor);
+	//close(file_descriptor);
+	state->buffer = buffer;
 
 
 
@@ -119,8 +129,8 @@ struct wl_buffer *draw_frame(struct state *state) {
 	// Ground
 	for(int y = 0; y < height; y++) {
 		for(int x = 0; x < width; x++) {
-			if(data[y * width + x] != 0x1500FF){
-				data[y * width + x] = 0x05ED39;
+			if(state->data[y * width + x] != 0x1500FF){
+				state->data[y * width + x] = 0x05ED39;
 			}	
 		}
 	}
@@ -128,7 +138,7 @@ struct wl_buffer *draw_frame(struct state *state) {
 	// Fruit
 	for(int y = state->fruit_y; y < state->fruit_y + FRUIT_SIZE; y++) {
 		for(int x = state->fruit_x; x < state->fruit_x + FRUIT_SIZE; x++) {
-			data[y * width + x] = 0xFF0000;	
+			state->data[y * width + x] = 0xFF0000;	
 		}	
 	}
 
@@ -136,8 +146,8 @@ struct wl_buffer *draw_frame(struct state *state) {
 	if(state->special_fruit_spawned == true) {
 		for(int y = state->special_fruit_y; y < state->special_fruit_y + FRUIT_SIZE; y++) {
 			for(int x = state->special_fruit_x; x < state->special_fruit_x + FRUIT_SIZE; x++) {
-					// Special fruit
-					data[y * width + x] = 0xFFF200;
+				// Special fruit
+				state->data[y * width + x] = 0xFFF200;
 			}	
 		}
 	}
@@ -151,24 +161,25 @@ struct wl_buffer *draw_frame(struct state *state) {
 	    
 	    for (int y = snake_pos_y; y < snake_height && y < height; y++) {
 		for (int x = snake_pos_x; x < snake_width && x < width; x++) {
-		    data[y * width + x] = 0x1500FF;
+		    state->data[y * width + x] = 0x1500FF;
 		}
 	    }
 	}
 
 	// Walls
-	for(int y = 0; y < height; y++) {
-		for(int x = 0; x < width; x++) {
-			if(y >= 0 && y <= 10 || y > height-10) {
-				data[y * width + x] = 0xFFFFFF;
+	for(int y = 0; y < SURFACE_HEIGHT; y++) {
+		for(int x = 0; x < SURFACE_WIDTH; x++) {
+			if(y >= 0 && y <= 10 || y > SURFACE_HEIGHT-10) {
+				state->data[y * width + x] = 0xFFFFFF;
 			}
-			if(x >= 0 && x <= 10 || x > width-10) {
-				data[y * width + x] = 0xFFFFFF;
+			if(x >= 0 && x <= 10 || x > SURFACE_WIDTH-10) {
+				state->data[y * width + x] = 0xFFFFFF;
 			}
 		}
 	}
 
-	munmap(data, size);
-	wl_buffer_add_listener(buffer, &wl_buffer_listener, NULL);
+	/*
 	return buffer;
+	*/
+	wl_buffer_add_listener(state->buffer, &wl_buffer_listener, NULL);
 }

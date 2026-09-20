@@ -24,6 +24,10 @@ int main(int argc, char *argv[]) {
 
 	// Creating surface
 	state.surface = wl_compositor_create_surface(state.compositor);
+	if (map_shared_memory(&state) == -1) {
+		fprintf(stderr, "Mapping shared memory failed.\n");	
+		return 1;
+	}
 
 	// Creating xdg_surface
 	state.xdg_surface = xdg_wm_base_get_xdg_surface(
@@ -41,8 +45,11 @@ int main(int argc, char *argv[]) {
 	struct wl_callback *callback = wl_surface_frame(state.surface);
 	wl_callback_add_listener(callback, &wl_surface_frame_listener, &state);
 
-	while (wl_display_dispatch(state.display)) {
+
+	while(wl_display_dispatch(state.display)) {
+	
 	}
+	munmap(state.data, state.size);
 	
 	return 0;
 }

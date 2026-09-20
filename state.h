@@ -84,6 +84,7 @@ struct state {
 
 	uint32_t start_time;
 	bool started_time;
+	uint32_t second;
 
 	int width, height;
 	bool closed;
@@ -91,6 +92,11 @@ struct state {
 	struct xkb_state *xkb_state;
 	struct xkb_context *xkb_context;
 	struct xkb_keymap *xkb_keymap;
+	uint32_t *data;
+	struct wl_buffer *buffer;
+	int size;
+	int file_descriptor;
+	int frame_count;
 };
 
 #endif

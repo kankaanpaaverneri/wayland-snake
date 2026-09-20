@@ -9,8 +9,8 @@ void xdg_surface_configure(
 	struct state *state = data;
 	xdg_surface_ack_configure(xdg_surface, serial);
 
-	struct wl_buffer *buffer = draw_frame(state);
-	wl_surface_attach(state->surface, buffer, 0, 0);
+	draw_frame(state);
+	wl_surface_attach(state->surface, state->buffer, 0, 0);
 	wl_surface_commit(state->surface);
 }
 

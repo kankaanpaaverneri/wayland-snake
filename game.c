@@ -18,6 +18,7 @@ void init_state(struct state *state) {
 	state->init_random_values = true;
 	state->init_snake = true;
 
+	state->second = 0;
 
 	for(int i = 0; i < state->snake_length; i++) {
 		state->snake_positions[i].snake_position_x = x;

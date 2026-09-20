@@ -41,3 +41,44 @@ int allocate_shared_memory_file(size_t size) {
 	return file_descriptor;
 }
 
+int map_shared_memory(struct state *state) {
+	const int width = SURFACE_WIDTH, height = SURFACE_HEIGHT;
+	int stride = width * 4;
+	int size = stride * height;
+	state->size = size;
+
+	int file_descriptor = allocate_shared_memory_file(size);
+	if(!file_descriptor) {
+		return -1;	
+	}
+	uint32_t *data = mmap(
+		NULL,
+		size,
+		PROT_READ | PROT_WRITE,
+		MAP_SHARED,
+		file_descriptor,
+		0
+	);
+	if(data == MAP_FAILED) {
+		close(file_descriptor);	
+		return -1;
+	}
+
+	struct wl_shm_pool *pool = wl_shm_create_pool(
+		state->shared_memory,
+		file_descriptor,
+		size
+	);
+	struct wl_buffer *buffer = wl_shm_pool_create_buffer(
+		pool,
+		0,
+		width,
+		height,
+		stride,
+		WL_SHM_FORMAT_XRGB8888
+	);
+	state->data = data;
+	state->buffer = buffer;
+	state->file_descriptor = file_descriptor;
+}
+

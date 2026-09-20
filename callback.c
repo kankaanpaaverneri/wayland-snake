@@ -8,8 +8,8 @@ void wl_surface_frame_done(void *data, struct wl_callback *callback, uint32_t ti
 	struct state *state = data;
 	callback = wl_surface_frame(state->surface);
 	wl_callback_add_listener(callback, &wl_surface_frame_listener, state);
-	struct wl_buffer *buffer = draw_frame(state);
-	wl_surface_attach(state->surface, buffer, 0, 0);
+	draw_frame(state);
+	wl_surface_attach(state->surface, state->buffer, 0, 0);
 	wl_surface_damage_buffer(state->surface, 0, 0, INT32_MAX, INT32_MAX);
 	wl_surface_commit(state->surface);
 
@@ -30,6 +30,10 @@ void wl_surface_frame_done(void *data, struct wl_callback *callback, uint32_t ti
 		state->start_time = time;
 		state->started_time = true;
 	}
+	if(state->second == 0) {
+		state->start_time = time;	
+		state->second = 1;
+	}
 	int elapsed = time - state->start_time;
 	if(elapsed > 5000) {
 		state->started_time = false;	
@@ -41,10 +45,17 @@ void wl_surface_frame_done(void *data, struct wl_callback *callback, uint32_t ti
 		state->started_time == false;
 		state->init_snake = false;
 		state->start_time = 0;
+		state->second = 0;
+	}
+	if(elapsed >= 1000 && state->second == 1) {
+		state->frame_count = 0;
+		state->second = 0;
+	
 	}
 
+
 	// Update state
-	const int move_amount = 3;
+	const int move_amount = 5;
 	switch (state->snake_direction) {
 		case Left:
 			state->snake_positions[0].snake_position_x -= move_amount;
@@ -63,7 +74,7 @@ void wl_surface_frame_done(void *data, struct wl_callback *callback, uint32_t ti
 			state->snake_positions[0].snake_height += move_amount;
 			break;
 	}
-	
+	state->frame_count += 1;
 }
 
 const struct wl_callback_listener wl_surface_frame_listener = {
